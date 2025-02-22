@@ -21,7 +21,7 @@ export function AuthForms() {
 async function handlesubmit(e){
     e.preventDefault()
     const fmdata=new FormData(e.target)
-    const {data}=await makeRequest({url:'/singnup',data:{email:fmdata.get('email'),password:fmdata.get('pwd'),name:fmdata.get('name')}})
+    const {data}=await makeRequest({url:'/singnup',data:{email:fmdata.get('email'),password:fmdata.get('pwd'),username:fmdata.get('name')}})
 
 
 }
