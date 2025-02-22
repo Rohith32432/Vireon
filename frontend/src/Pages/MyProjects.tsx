@@ -41,7 +41,7 @@ export default function MyProjects() {
     setProjects([...projects, newProject]);
     setIsOpen(false);
     reset();
-    navigate(`/project/${newProject.id}`); // Fix: use navigate() instead of history.push()
+    navigate(`/user/project/${newProject.id}`); // Fix: use navigate() instead of history.push()
   };
 
   return (
@@ -56,7 +56,7 @@ export default function MyProjects() {
           <Card
             key={project.id}
             className="cursor-pointer hover:shadow-lg"
-            onClick={() => navigate(`/project/${project.id}`)} // Fix: use navigate()
+            onClick={() => navigate(`/user/project/${project.id}`)} // Fix: use navigate()
           >
             <CardHeader>
               <h2 className="text-lg font-semibold">{project.name}</h2>
