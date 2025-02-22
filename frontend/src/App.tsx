@@ -7,6 +7,7 @@ import AppSidebar from './Components/SideBar'
 import Check from './useful/Check'
 import UserPage from './Components/UserPage'
 import MyProjects from './projects/MyProjects'
+import Project from './projects/Project'
 
 function App() {
  
@@ -27,6 +28,7 @@ function App() {
       <Route path='home' element={<Home/>}/>
       <Route path='page' element={<UserPage/>}/>
       <Route path='myprojects' element={<MyProjects/>}/>
+      <Route path='project/:id' element={<Project/>} />
       </Route>
     </Routes>
           
