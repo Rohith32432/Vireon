@@ -116,6 +116,7 @@ def build_call_tree_from_file(file_path: str) -> List[Dict]:
       - function: function name
       - code: source code of the function
       - calls: list of child nodes representing functions called within it
+    Only functions that are not called by any other function are returned as roots.
     """
     with open(file_path, "r", encoding="utf-8") as f:
         source = f.read()
@@ -124,7 +125,7 @@ def build_call_tree_from_file(file_path: str) -> List[Dict]:
     except Exception as e:
         raise ValueError(f"Error parsing {file_path}: {e}")
 
-    # Collect top-level function definitions
+    # Collect top-level function definitions.
     func_defs = {}
     for node in module_tree.body:
         if isinstance(node, ast.FunctionDef):
@@ -140,30 +141,42 @@ def build_call_tree_from_file(file_path: str) -> List[Dict]:
     def build_tree(node: ast.FunctionDef, visited=None) -> Dict:
         if visited is None:
             visited = set()
-        # Avoid infinite recursion in case of cyclic calls
         if node.name in visited:
             return {"function": node.name, "code": get_source(node), "calls": []}
         visited.add(node.name)
-        calls = []
-        # Traverse the function body for call nodes
+        child_nodes = {}
         for subnode in ast.walk(node):
             if isinstance(subnode, ast.Call):
                 func_name = get_func_name(subnode.func)
-                if func_name in func_defs:
-                    calls.append(build_tree(func_defs[func_name], visited.copy()))
-        return {"function": node.name, "code": get_source(node), "calls": calls}
+                if func_name in func_defs and func_name not in child_nodes:
+                    child_nodes[func_name] = build_tree(func_defs[func_name], visited.copy())
+        return {"function": node.name, "code": get_source(node), "calls": list(child_nodes.values())}
 
-    call_trees = []
-    for func in func_defs.values():
-        call_trees.append(build_tree(func))
-    return call_trees
+    # Build call trees for all functions.
+    all_trees = [build_tree(func) for func in func_defs.values()]
+
+    # Helper to gather all function names that appear as children.
+    def gather_called(tree: Dict) -> set:
+        result = set()
+        for child in tree.get("calls", []):
+            result.add(child["function"])
+            result.update(gather_called(child))
+        return result
+
+    called_set = set()
+    for tree in all_trees:
+        called_set.update(gather_called(tree))
+
+    # Only return trees whose function is not called by any other (i.e. roots).
+    roots = [tree for tree in all_trees if tree["function"] not in called_set]
+    return roots
 
 
 def parse_functions_from_code(source: str) -> List[Dict]:
     """
     Parse the source code for function definitions and return a list of
-    dictionaries with function name and its AST (as a string using ast.dump).
-    This is used for the AI endpoints.
+    dictionaries with function name, code, and its AST dump.
+    Used for the AI endpoints.
     """
     try:
         tree = ast.parse(source)
@@ -232,9 +245,11 @@ def parse_and_store_repo(repo_input: RepoParseInput, db: Session = Depends(get_d
     all_call_trees = []
     for file_path in files:
         try:
+            # Use a relative path with respect to the repository clone directory.
+            rel_path = os.path.relpath(file_path, tmp_dir)
             tree = build_call_tree_from_file(file_path)
             all_call_trees.append({
-                "file": file_path,
+                "file": rel_path,
                 "call_tree": tree
             })
         except Exception as e:
@@ -268,7 +283,7 @@ def get_project_ast(username: str, project_name: str, db: Session = Depends(get_
 @app.post("/ai/summary")
 def ai_summary(code_snippet: CodeSnippet):
     code = code_snippet.code
-    # Dummy AI summary – replace with a real AI model integration in production.
+    # Dummy AI summary – replace with real AI integration.
     summary = f"This function appears to have {len(code.splitlines())} lines and performs specific operations."
     try:
         func_ast = parse_functions_from_code(code)
