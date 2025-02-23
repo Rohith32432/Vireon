@@ -4,7 +4,7 @@ import { useAuth } from "@/Context/userContext";
 
 const Check: FC = () => {
   const { user } = useAuth();
-  return user ? <Outlet /> : <h1>Please login</h1>;
+  return true ? <Outlet /> : <h1>Please login</h1>;
 };
 
 export default Check;

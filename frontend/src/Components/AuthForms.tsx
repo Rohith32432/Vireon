@@ -46,7 +46,7 @@ export const AuthForms: FC = () => {
       },
     });
     if (data) {
-      navigate('/user/home');
+      navigate('/user/page');
     }
   };
 
