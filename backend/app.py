@@ -3,7 +3,7 @@ import ast
 import git
 import json
 import tempfile
-from typing import List, Dict
+from typing import List, Dict, Generator
 
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, EmailStr, Field
@@ -11,10 +11,11 @@ from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, an
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from passlib.context import CryptContext
+from fastapi.middleware.cors import CORSMiddleware
 
 # -------------------- Database Setup --------------------
 # Update this connection string with your MySQL credentials and database name.
-DATABASE_URL = "mysql+pymysql://root:root@127.0.0.1/vireon"
+DATABASE_URL = "mysql+pymysql://root:mysql%40R1@127.0.0.1/vireon"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -58,9 +59,22 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # -------------------- FastAPI Initialization --------------------
 app = FastAPI(title="Production-Ready Code Analysis API")
 
+# Enable CORS
+origins = [
+    "http://localhost:5173",  # Vite development server
+    # Add other origins if needed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dependency: Provide DB session
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
@@ -126,11 +140,7 @@ def build_call_tree_from_file(file_path: str) -> List[Dict]:
         raise ValueError(f"Error parsing {file_path}: {e}")
 
     # Collect top-level function definitions.
-    func_defs = {}
-    for node in module_tree.body:
-        if isinstance(node, ast.FunctionDef):
-            func_defs[node.name] = node
-
+    func_defs = {node.name: node for node in module_tree.body if isinstance(node, ast.FunctionDef)}
     source_lines = source.splitlines()
 
     def get_source(node: ast.FunctionDef) -> str:
@@ -152,10 +162,8 @@ def build_call_tree_from_file(file_path: str) -> List[Dict]:
                     child_nodes[func_name] = build_tree(func_defs[func_name], visited.copy())
         return {"function": node.name, "code": get_source(node), "calls": list(child_nodes.values())}
 
-    # Build call trees for all functions.
     all_trees = [build_tree(func) for func in func_defs.values()]
 
-    # Helper to gather all function names that appear as children.
     def gather_called(tree: Dict) -> set:
         result = set()
         for child in tree.get("calls", []):
@@ -167,7 +175,6 @@ def build_call_tree_from_file(file_path: str) -> List[Dict]:
     for tree in all_trees:
         called_set.update(gather_called(tree))
 
-    # Only return trees whose function is not called by any other (i.e. roots).
     roots = [tree for tree in all_trees if tree["function"] not in called_set]
     return roots
 
@@ -187,10 +194,12 @@ def parse_functions_from_code(source: str) -> List[Dict]:
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             func_ast = ast.dump(node)
+            start = node.lineno - 1
+            end = node.end_lineno if hasattr(node, "end_lineno") else node.lineno
+            code_snippet = "\n".join(source.splitlines()[start:end])
             functions.append({
                 "function": node.name,
-                "code": "\n".join(source.splitlines()[
-                                  node.lineno - 1:(node.end_lineno if hasattr(node, 'end_lineno') else node.lineno)]),
+                "code": code_snippet,
                 "ast": func_ast
             })
     return functions
@@ -198,9 +207,9 @@ def parse_functions_from_code(source: str) -> List[Dict]:
 
 # -------------------- Endpoints --------------------
 
-# 1. Signup Endpoint
 @app.post("/signup")
 def signup(user: SignupInput, db: Session = Depends(get_db)):
+    print(user)
     existing = db.query(User).filter(
         (User.username == user.username) | (User.email == user.email)
     ).first()
@@ -219,7 +228,6 @@ def signup(user: SignupInput, db: Session = Depends(get_db)):
     return {"message": "User registered successfully", "user_id": new_user.id}
 
 
-# 2. Login Endpoint
 @app.post("/login")
 def login(user: LoginInput, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == user.username).first()
@@ -228,8 +236,10 @@ def login(user: LoginInput, db: Session = Depends(get_db)):
     # In production, return a JWT token here.
     return {"message": "Login successful", "user_id": db_user.id}
 
+@app.get('/')
+def helo():
+    return 'hi'
 
-# 3. Parse Code Functions and Store AST Endpoint
 @app.post("/repo/parse")
 def parse_and_store_repo(repo_input: RepoParseInput, db: Session = Depends(get_db)):
     tmp_dir = tempfile.mkdtemp()
@@ -245,7 +255,6 @@ def parse_and_store_repo(repo_input: RepoParseInput, db: Session = Depends(get_d
     all_call_trees = []
     for file_path in files:
         try:
-            # Use a relative path with respect to the repository clone directory.
             rel_path = os.path.relpath(file_path, tmp_dir)
             tree = build_call_tree_from_file(file_path)
             all_call_trees.append({
@@ -267,7 +276,6 @@ def parse_and_store_repo(repo_input: RepoParseInput, db: Session = Depends(get_d
     return {"message": "Repository parsed and call tree stored successfully", "project_id": project.id}
 
 
-# 4. Retrieve User-Defined Functions' AST Endpoint
 @app.get("/ast")
 def get_project_ast(username: str, project_name: str, db: Session = Depends(get_db)):
     project = db.query(CodeProject).filter(
@@ -279,11 +287,9 @@ def get_project_ast(username: str, project_name: str, db: Session = Depends(get_
     return {"username": username, "project_name": project_name, "call_trees": call_tree_data}
 
 
-# 5. AI Summary Endpoint
 @app.post("/ai/summary")
 def ai_summary(code_snippet: CodeSnippet):
     code = code_snippet.code
-    # Dummy AI summary – replace with real AI integration.
     summary = f"This function appears to have {len(code.splitlines())} lines and performs specific operations."
     try:
         func_ast = parse_functions_from_code(code)
@@ -292,11 +298,9 @@ def ai_summary(code_snippet: CodeSnippet):
     return {"summary": summary, "ast": func_ast}
 
 
-# 6. AI Code Optimization Endpoint
 @app.post("/ai/optimize")
 def ai_optimize(code_snippet: CodeSnippet):
     code = code_snippet.code
-    # Dummy optimization suggestion – replace with real AI integration.
     optimization = "Consider refactoring loops and reducing redundant computations for better performance."
     try:
         func_ast = parse_functions_from_code(code)
@@ -305,11 +309,9 @@ def ai_optimize(code_snippet: CodeSnippet):
     return {"optimization": optimization, "ast": func_ast}
 
 
-# 7. AI Suggestion Endpoint
 @app.post("/ai/suggest")
 def ai_suggest(code_snippet: CodeSnippet):
     code = code_snippet.code
-    # Dummy suggestion – replace with real AI integration.
     suggestion = "Improve variable naming and add inline comments for clarity."
     try:
         func_ast = parse_functions_from_code(code)
@@ -321,5 +323,4 @@ def ai_suggest(code_snippet: CodeSnippet):
 # -------------------- Run the Application --------------------
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
