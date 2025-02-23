@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Background,
   ReactFlow,
@@ -7,14 +7,16 @@ import {
   addEdge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
- 
+import Modal from './Modal';
+
 const initialNodes = [
   {
     id: 'horizontal-1',
     sourcePosition: 'right',
     type: 'input',
     data: { label: 'Input' },
-    position: { x: 0, y: 80 },
+    position: { x: 0, y: 80 },    
+    code: "function isPrime(num) { for (let i = 2; i <= Math.sqrt(num); i++) { if (num % i === 0) return false; } return num > 1; } console.log(isPrime(29));"
   },
   {
     id: 'horizontal-2',
@@ -66,7 +68,7 @@ const initialNodes = [
     position: { x: 750, y: 300 },
   },
 ];
- 
+
 const initialEdges = [
   {
     id: 'horizontal-e1-2',
@@ -118,7 +120,7 @@ const initialEdges = [
     animated: true,
   },
 ];
- 
+
 const HorizontalFlow = () => {
   const [nodes, _, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -126,24 +128,33 @@ const HorizontalFlow = () => {
     (params) => setEdges((els) => addEdge(params, els)),
     [],
   );
- 
+const [code,setcode]=useState('')
+  function handleClick(event, node) {
+    console.log('Node clicked:', node);
+    setstatus(!status)
+    setcode("def Agent(url=\"https://medium.com/dataherald/how-to-langchain-sqlchain-c7342dd41614\"):\n    data=Scraped_data(url)\n    chunks=chunked_data(data)\n \n\n    vector=vector_model(chunks)\n    agent=get_agent(vector)\n    return agent")
+  }
+  const [status,setstatus]=useState(false)
+  
   return (
-      <div className='w-[90vwh] h-[70vh] text-background  rounded-xl  '>
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-    //   onConnect={onConnect}
-      fitView
-      attributionPosition="bottom-right"
-    //   style={{ backgroundColor: "#F7F9FB" }}
+    <div className='w-[90vwh] h-[70vh] text-background  rounded-xl  '>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        //   onConnect={onConnect}
+        onNodeClick={handleClick}
+        fitView
+        attributionPosition="bottom-right"
+      //   style={{ backgroundColor: "#F7F9FB" }}
       >
         {/* <Background /> */}
-      </ReactFlow>  
-          </div>
+      </ReactFlow>
+      <Modal show={status} setshow={setstatus} data={code}/>
+    </div>
   );
 };
- 
+
 export default HorizontalFlow;
 

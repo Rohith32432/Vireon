@@ -7,8 +7,9 @@ import AppSidebar from './Components/SideBar'
 import Check from './useful/Check'
 import UserPage from './Components/UserPage'
 import MyProjects from './Pages/MyProjects'
-import Project from './projects/Project'
 import FlowChart from './Components/FlowChart'
+import Project from './projects/Project'
+import Snippet from './Components/Snippet'
 
 function App() {
  
@@ -27,11 +28,12 @@ function App() {
       <Route path='/enter' element={<AuthForms/>}/>
       <Route element={<Check/>} path='/user'>
       <Route path='home' element={<Home/>}/>
-      <Route path='page' element={<MyProjects/>}/>
-      <Route path='x' element={<FlowChart/>}/>
+      <Route path='page' element={<UserPage/>}/>
+      <Route path='myprojects' element={<MyProjects/>}/>
       <Route path='project/:id' element={<Project/>} />
+      <Route path='x' element={<FlowChart/>} />
+      <Route path='Y' element={<Snippet/>} />
       </Route>
-      <Route path='*' element={<h1>Not Found</h1>}/>
     </Routes>
           
 

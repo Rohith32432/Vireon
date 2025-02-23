@@ -44,7 +44,6 @@ export function makeRequest({ type = 'GET', url, data ,formdata}: defaultopts) {
     }
     const config = {
         headers: {
-            'Authorization': `Bearer ${token}`,
             ...(formdata ? {} : { 'Content-Type': 'application/json' })
         }
     };
