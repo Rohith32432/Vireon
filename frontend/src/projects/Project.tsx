@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, FC } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import "reactflow/dist/style.css";
-import axios from "axios";
+import { makeRequest } from "@/useful/ApiContext";
 
 interface ProjectDetails {
   id: number;
@@ -20,35 +19,44 @@ interface ProjectDetails {
   executionSteps: string[]; // Execution tracking
 }
 
-const Project: React.FC = () => {
-  const { id } = useParams<{ id: any }>();
-  const [project, setProject] = useState<ProjectDetails | null>({
-name:'nvjn',
-language:'f',
-repoUrl:'http://localhost:5173/user/project/1',
-lastUpdated:'nn',
-status:'jn',
-executionSteps:[],
-contributors:[]
-
-  });
+const Project: FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  console.log(id);
-  
-  // useEffect(() => {
-  //   // Simulating API fetch
-  //   axios.get(`/api/projects/${id}`)
-  //     .then((response) => {
-  //       setProject(response.data);
-  //       setLoading(false);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching project details:", error);
-  //       setLoading(false);
-  //     });
-  // }, [id]);
 
+  useEffect(() => {
+    async function fetchProjectDetails() {
+      try {
+        const response = await makeRequest({ url: `/ast?username=test_user&project_name=${id}` });
+        const { data } = response;
+        setProject({
+          id: data.project_id,
+          name: data.project_name,
+          repoUrl: data.repo_url,
+          language: "Python", // Replace with actual language if available
+          contributors: [], // Replace with actual contributors if available
+          lastUpdated: "2023-01-01", // Replace with actual date if available
+          status: "Active", // Replace with actual status if available
+          insights: "AI insights here", // Replace with actual insights if available
+          flowData: data.call_trees, // Replace with actual flow data if available
+          executionSteps: [] // Replace with actual execution steps if available
+        });
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProjectDetails();
+  }, [id]);
 
+  if (loading) {
+    return <Skeleton className="h-64 w-full" />;
+  }
+
+  if (!project) {
+    return <p>Project not found</p>;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -58,7 +66,17 @@ contributors:[]
           <p className="text-gray-600">{project.language}</p>
         </CardHeader>
         <CardContent>
-          <p className="text-sm">Repository: <a href={project.repoUrl} className="text-blue-500 hover:underline">{project.repoUrl}</a></p>
+          <p className="text-sm">
+            Repository:{" "}
+            <a
+              href={project.repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:underline"
+            >
+              {project.repoUrl}
+            </a>
+          </p>
           <p className="text-sm">Last Updated: {project.lastUpdated}</p>
           <p className={`text-sm font-semibold ${project.status === "Active" ? "text-green-600" : "text-red-600"}`}>
             Status: {project.status}
@@ -66,7 +84,6 @@ contributors:[]
         </CardContent>
       </Card>
 
-      {/* Tabs for different sections */}
       <Tabs defaultValue="visualization">
         <TabsList>
           <TabsTrigger value="visualization">Code Flow</TabsTrigger>
@@ -75,14 +92,17 @@ contributors:[]
           <TabsTrigger value="contributors">Contributors</TabsTrigger>
         </TabsList>
 
-        
+        <TabsContent value="visualization">
+          {/* TODO: Render ReactFlow visualization using project.flowData */}
+        </TabsContent>
+
         <TabsContent value="debugging">
-          <p className="text-sm text-gray-600">{project?.insights}</p>
+          <p className="text-sm text-gray-600">{project.insights}</p>
         </TabsContent>
 
         <TabsContent value="execution">
           <ul className="list-disc pl-6 text-sm text-gray-700">
-            {project?.executionSteps.map((step, index) => (
+            {project.executionSteps.map((step, index) => (
               <li key={index}>{step}</li>
             ))}
           </ul>
@@ -90,7 +110,7 @@ contributors:[]
 
         <TabsContent value="contributors">
           <ul className="list-disc pl-6 text-sm text-gray-700">
-            {project?.contributors.map((contributor, index) => (
+            {project.contributors.map((contributor, index) => (
               <li key={index}>{contributor}</li>
             ))}
           </ul>

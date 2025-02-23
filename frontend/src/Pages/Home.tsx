@@ -1,9 +1,13 @@
-import React from 'react'
+import React, { FC } from 'react';
+import ExampleComponent from '@/Components/ExampleComponent';
 
-function Home() {
+const Home: FC = () => {
   return (
-    <div>Home</div>
-  )
-}
+    <div>
+      <h1>Home</h1>
+      <ExampleComponent />
+    </div>
+  );
+};
 
-export default Home
+export default Home;

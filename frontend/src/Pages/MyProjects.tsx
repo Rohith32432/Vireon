@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, FC } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Add SelectValue
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
-import { useNavigate } from "react-router-dom"; // useNavigate for navigation
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { makeRequest } from "@/useful/ApiContext";
 
 // Define form validation schema
 const projectSchema = z.object({
@@ -16,15 +17,19 @@ const projectSchema = z.object({
   language: z.string().min(1, "Select a programming language"),
 });
 
-const languages = ["Python", "JavaScript", "TypeScript", "Java", "Go", "C++"];
+type ProjectFormData = z.infer<typeof projectSchema>;
 
-export default function MyProjects() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [projects, setProjects] = useState([
+const languages: string[] = ["Python", "JavaScript", "TypeScript", "Java", "Go", "C++"];
+
+const MyProjects: FC = () => {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [projects, setProjects] = useState<
+    Array<{ id: number; name: string; language: string; repoUrl: string }>
+  >([
     { id: 1, name: "Vireon Core", language: "Python", repoUrl: "https://github.com/example/vireon-core" },
     { id: 2, name: "UI Refactor", language: "TypeScript", repoUrl: "https://github.com/example/ui-refactor" },
   ]);
-  const navigate = useNavigate(); // Fix: useNavigate returns a function
+  const navigate = useNavigate();
 
   const {
     register,
@@ -32,16 +37,26 @@ export default function MyProjects() {
     control,
     formState: { errors },
     reset,
-  } = useForm({
+  } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
   });
 
-  const onSubmit = (data) => {
-    const newProject = { id: projects.length + 1, ...data };
-    setProjects([...projects, newProject]);
-    setIsOpen(false);
-    reset();
-    navigate(`/user/project/${newProject.id}`); // Fix: use navigate() instead of history.push()
+  const onSubmit = async (data: ProjectFormData) => {
+    const response = await makeRequest({
+      url: "/repo/parse",
+      data: {
+        repo_url: data.repoUrl,
+        username: "test_user", // Replace with actual username
+        project_name: data.name,
+      },
+    });
+    if (response.data) {
+      const newProject = { id: response.data.project_id, ...data };
+      setProjects([...projects, newProject]);
+      setIsOpen(false);
+      reset();
+      navigate(`/user/project/${newProject.id}`);
+    }
   };
 
   return (
@@ -56,14 +71,19 @@ export default function MyProjects() {
           <Card
             key={project.id}
             className="cursor-pointer hover:shadow-lg"
-            onClick={() => navigate(`/user/project/${project.id}`)} // Fix: use navigate()
+            onClick={() => navigate(`/user/project/${project.id}`)}
           >
             <CardHeader>
               <h2 className="text-lg font-semibold">{project.name}</h2>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600">{project.language}</p>
-              <a href={project.repoUrl} target="_blank" className="text-blue-500 hover:underline">
+              <a
+                href={project.repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:underline"
+              >
                 {project.repoUrl}
               </a>
             </CardContent>
@@ -110,10 +130,14 @@ export default function MyProjects() {
               />
               {errors.language && <p className="text-red-500 text-sm">{errors.language.message}</p>}
             </div>
-            <Button type="submit" className="w-full">Create Project</Button>
+            <Button type="submit" className="w-full">
+              Create Project
+            </Button>
           </form>
         </DialogContent>
       </Dialog>
     </div>
   );
-}
+};
+
+export default MyProjects;
