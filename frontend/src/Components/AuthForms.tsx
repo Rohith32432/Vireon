@@ -41,7 +41,7 @@ export const AuthForms: FC = () => {
       type: 'POST',
       url: '/login',
       data: {
-        username: fmdata.get('email'),
+        email: fmdata.get('email'),
         password: fmdata.get('pwd'),
       },
     });
