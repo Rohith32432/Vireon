@@ -10,6 +10,7 @@ import MyProjects from './Pages/MyProjects'
 import FlowChart from './Components/FlowChart'
 import Project from './projects/Project'
 import Snippet from './Components/Snippet'
+import Demmo from './Components/Demmo'
 
 function App() {
  
@@ -26,6 +27,7 @@ function App() {
     <Routes>
       <Route path='/' element={<Home/>}/>
       <Route path='/enter' element={<AuthForms/>}/>
+      <Route path='/x' element={<Demmo/>}/>
       <Route element={<Check/>} path='/user'>
       <Route path='home' element={<Home/>}/>
       <Route path='page' element={<UserPage/>}/>

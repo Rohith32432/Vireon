@@ -1,21 +1,13 @@
-import { makeRequest } from '@/useful/ApiContext'
-import React, { useEffect } from 'react'
+import React, { FC } from 'react';
+import ExampleComponent from '@/Components/ExampleComponent';
 
-function Home() {
-
-  useEffect(()=>{
-    async function handlelogin(){
-      // e.preventDefault()
-      // const fmdata=new FormData(e.target)
-        const {data}=await makeRequest({url:'/'})
-      
-      }
-    handlelogin()
-  },[])
-
+const Home: FC = () => {
   return (
-    <>Home</>
-  )
-}
+    <div>
+      <h1>Home</h1>
+      {/* <ExampleComponent /> */}
+    </div>
+  );
+};
 
-export default Home
+export default Home;

@@ -86,11 +86,11 @@ def get_db() -> Generator[Session, None, None]:
 class SignupInput(BaseModel):
     username: str = Field(..., min_length=3)
     email: EmailStr
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=3)
 
 
 class LoginInput(BaseModel):
-    username: str
+    email: EmailStr
     password: str
 
 
@@ -230,9 +230,9 @@ def signup(user: SignupInput, db: Session = Depends(get_db)):
 
 @app.post("/login")
 def login(user: LoginInput, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.username == user.username).first()
+    db_user = db.query(User).filter(User.email == user.email).first()
     if not db_user or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid username or password")
+        raise HTTPException(status_code=400, detail="Invalid email or password")
     # In production, return a JWT token here.
     return {"message": "Login successful", "user_id": db_user.id}
 

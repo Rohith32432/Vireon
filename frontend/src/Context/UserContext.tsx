@@ -1,5 +1,7 @@
-import { getCookies, makeRequest, setcookie } from "@/useful/ApiContext"
+import { getCookies, makeRequest } from "@/useful/ApiContext"
 import { createContext, useContext, useEffect, useState } from "react"
+import { setCookie } from "@/useful/ApiContext";
+
 
 const context = createContext()
 
@@ -19,7 +21,7 @@ function UserContext({ children }) {
                 
                 if(data){
                     setUser(data)
-                      setcookie('user',JSON.stringify(data))
+                      setCookie('user',JSON.stringify(data))
                   }
 
         }

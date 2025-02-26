@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import {
   Background,
   ReactFlow,
@@ -14,7 +14,6 @@ const initialNodes = [
   {
     id: 'node-1',
     sourcePosition: 'right',
-    type: 'input',
     data: { label: 'Input' },
     position: { x: 0, y: 80 },    
     code: "function isPrime(num) { for (let i = 2; i <= Math.sqrt(num); i++) { if (num % i === 0) return false; } return num > 1; } console.log(isPrime(29));"
@@ -122,9 +121,12 @@ const initialEdges = [
   },
 ];
 
-const FlowChart: FC = () => {
+function FlowChartDemo ({chartdata}) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+
+
 
   const onConnect = useCallback(
     (params: Connection | Edge) => setEdges((eds) => addEdge(params, eds)),
@@ -139,6 +141,8 @@ const FlowChart: FC = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={(node)=>{console.log(node);
+        }}
         fitView
         attributionPosition="bottom-right"
       >
@@ -148,4 +152,4 @@ const FlowChart: FC = () => {
   );
 };
 
-export default FlowChart;
+export default FlowChartDemo;
