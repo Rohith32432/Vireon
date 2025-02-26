@@ -27,7 +27,7 @@ function App() {
     <Routes>
       <Route path='/' element={<Home/>}/>
       <Route path='/enter' element={<AuthForms/>}/>
-      <Route path='/x' element={<Demmo/>}/>
+      {/* <Route path='/x' element={<Demmo/>}/> */}
       <Route element={<Check/>} path='/user'>
       <Route path='home' element={<Home/>}/>
       <Route path='page' element={<UserPage/>}/>
