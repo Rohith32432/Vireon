@@ -15,9 +15,9 @@ function UserContext({ children }) {
     
     useEffect(()=>{
         async function profile(){
-                const {role,_id}=usercookie
-                const {data}=await makeRequest({url:`/${role =='user'?'users':'instructors'}/profile/${_id}`})
-                console.log(data);
+                const {id}=usercookie
+                const {data}=await makeRequest({url:`/profile/${id}`})
+                // console.log(data);
                 
                 if(data){
                     setUser(data)

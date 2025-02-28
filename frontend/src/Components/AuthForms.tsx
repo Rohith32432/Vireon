@@ -9,13 +9,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { makeRequest } from "@/useful/ApiContext";
+import { useAuth } from "@/Context/UserContext";
+import { makeRequest, setCookie } from "@/useful/ApiContext";
 import { useState, FC, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const AuthForms: FC = () => {
   const [status, setStatus] = useState<boolean>(true);
   const navigate = useNavigate();
+  const {setUser}=useAuth()
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,7 +32,9 @@ export const AuthForms: FC = () => {
       },
     });
     if (data) {
-      navigate('/user/home');
+      navigate('/user/enter');
+      // console.log(data);
+      
     }
   };
 
@@ -46,7 +50,11 @@ export const AuthForms: FC = () => {
       },
     });
     if (data) {
+      setCookie('user',data?.user)
+      setUser(data?.user)
       navigate('/user/page');
+      // console.log(data);
+      
     }
   };
 

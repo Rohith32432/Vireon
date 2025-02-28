@@ -1,5 +1,5 @@
 import React, { useEffect, useState, FC } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { makeRequest } from "@/useful/ApiContext";
 import FlowChart from "@/Components/FlowChart";
 import FlowChartDemo from "@/Components/FlowCartDemo";
 import Demo from "@/Components/Demmo";
+import { useAuth } from "@/Context/UserContext";
 
 interface ProjectDetails {
   id: number;
@@ -23,14 +24,21 @@ interface ProjectDetails {
 }
 
 const Project: FC = () => {
+  const {user}=useAuth()
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [x,setx]=useState('')
+  const {search}=useLocation()
+  const query=new URLSearchParams(search)
+// console.log(query.get('name'),id,user);
+
   useEffect(() => {
-    async function fetchProjectDetails() {
+    async function fetchProjectDetails(name,prjname) {
+      console.log(name);
+      
       try {
-        const response = await makeRequest({ url: `/ast?username=test_user&project_name=Rohith_K` });
+        const response = await makeRequest({ url: `/ast?username=${name}&project_name=${prjname}&id=${id}` });
         const { data } = response;
         // console.log(data);
         setx(data)
@@ -52,7 +60,7 @@ const Project: FC = () => {
         setLoading(false);
       }
     }
-    fetchProjectDetails();
+    fetchProjectDetails(user?.username,query.get('name'));
   }, [id]);
 
   if (loading) {

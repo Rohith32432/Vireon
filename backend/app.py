@@ -234,11 +234,26 @@ def login(user: LoginInput, db: Session = Depends(get_db)):
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="Invalid email or password")
     # In production, return a JWT token here.
-    return {"message": "Login successful", "user_id": db_user.id}
+    return {"message": "Login successful", "user": db_user}
 
 @app.get('/')
 def helo():
     return 'hi'
+
+@app.get('/profile/{userid}')
+def profile(userid:int,db: Session = Depends(get_db)):
+    user=db.query(User).filter(User.id==userid).first()
+    if not user :
+        return 'please login'
+    return user
+
+@app.get('/userprjs/{userid}')
+def userprjs(userid:int,db: Session = Depends(get_db)):
+    user=db.query(User).filter(User.id==userid).first()
+    if user :
+        user_prjs=db.query(CodeProject).filter(user.username==CodeProject.username).all()
+        return user_prjs
+    return 'err'
 
 @app.post("/repo/parse")
 def parse_and_store_repo(repo_input: RepoParseInput, db: Session = Depends(get_db)):
@@ -273,13 +288,13 @@ def parse_and_store_repo(repo_input: RepoParseInput, db: Session = Depends(get_d
     db.add(project)
     db.commit()
     db.refresh(project)
-    return {"message": "Repository parsed and call tree stored successfully", "project_id": project.id}
+    return {"message": "Repository parsed and call tree stored successfully", "project_id": project.id,"name":project.project_name}
 
 
 @app.get("/ast")
-def get_project_ast(username: str, project_name: str, db: Session = Depends(get_db)):
+def get_project_ast(username: str, project_name: str,id:int ,db: Session = Depends(get_db)):
     project = db.query(CodeProject).filter(
-        and_(CodeProject.username == username, CodeProject.project_name == project_name)
+        and_(CodeProject.username == username, CodeProject.project_name == project_name,CodeProject.id==id)
     ).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

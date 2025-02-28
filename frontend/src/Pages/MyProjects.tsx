@@ -1,4 +1,4 @@
-import React, { useState, FC } from "react";
+import React, { useState, FC, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { makeRequest } from "@/useful/ApiContext";
+import { useAuth } from "@/Context/UserContext";
 
 // Define form validation schema
 const projectSchema = z.object({
@@ -22,13 +23,10 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 const languages: string[] = ["Python", "JavaScript", "TypeScript", "Java", "Go", "C++"];
 
 const MyProjects: FC = () => {
+  const {user}=useAuth()
+  
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [projects, setProjects] = useState<
-    Array<{ id: number; name: string; language: string; repoUrl: string }>
-  >([
-    { id: 1, name: "Vireon Core", language: "Python", repoUrl: "https://github.com/example/vireon-core" },
-    { id: 2, name: "UI Refactor", language: "TypeScript", repoUrl: "https://github.com/example/ui-refactor" },
-  ]);
+  const [projects, setProjects] = useState<any>([]);
   const navigate = useNavigate();
 
   const {
@@ -40,24 +38,44 @@ const MyProjects: FC = () => {
   } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
   });
+  useEffect(()=>{
+   async function getuserprjs(user:any){
+    
+      const {data,status} = await makeRequest({
+        url: `/userprjs/${user?.id}`,
+      });
+      if(data){
+        console.log(data);
+        setProjects(data)
+      }
+    }
+  user &&    getuserprjs(user)
 
-  const onSubmit = async (data: ProjectFormData) => {
-    const response = await makeRequest({
-      type:'post',
+    
+  },[user])
+
+  const onSubmit = async (datax: ProjectFormData) => {
+    const {data,status} = await makeRequest({
+      type: 'post',
       url: "/repo/parse",
       data: {
-        repo_url: data.repoUrl,
-        username: "test_user", // Replace with actual username
-        project_name: data.name,
+        repo_url: datax.repoUrl,
+        username: user?.username, // Replace with actual username
+        project_name: datax.name,
       },
     });
-    if (response.data) {
-      const newProject = { id: response.data.project_id, ...data };
-      setProjects([...projects, newProject]);
-      setIsOpen(false);
-      reset();
-      navigate(`/user/project/${newProject.id}`);
+    if(status==200){
+        const newProject = { id: data?.project_id, ...data };
+        setProjects([...projects, newProject]);
+        setIsOpen(false);
+        reset();
+        navigate(`/user/project/${newProject.id}?name=${newProject?.project_name}`);
+
     }
+    // if (response.data) {
+    // }
+    console.log(data);
+    
   };
 
   return (
@@ -72,20 +90,20 @@ const MyProjects: FC = () => {
           <Card
             key={project.id}
             className="cursor-pointer hover:shadow-lg"
-            onClick={() => navigate(`/user/project/${project.id}`)}
+            onClick={() => navigate(`/user/project/${project.id}?name=${project?.project_name}`)}
           >
             <CardHeader>
-              <h2 className="text-lg font-semibold">{project.name}</h2>
+              <h2 className="text-lg font-semibold">{project?.project_name}</h2>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600">{project.language}</p>
+              <p className="text-sm text-gray-600">{project.username}</p>
               <a
                 href={project.repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline"
               >
-                {project.repoUrl}
+                {project.repo_url}
               </a>
             </CardContent>
           </Card>
