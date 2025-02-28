@@ -52,7 +52,7 @@ export const AuthForms: FC = () => {
     if (data) {
       setCookie('user',data?.user)
       setUser(data?.user)
-      navigate('/user/page');
+      navigate('/user/myprojects');
       // console.log(data);
       
     }

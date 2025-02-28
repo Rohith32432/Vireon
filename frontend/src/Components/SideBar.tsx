@@ -43,7 +43,7 @@ export default function AppSidebar() {
 
   function logout() {
     removeCookies();
-    navigate("/login");
+    navigate("/enter");
   }
 
   return (

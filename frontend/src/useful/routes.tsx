@@ -3,18 +3,13 @@ import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 export const userRoutes = [
   {
     title: "Home",
-    url: "/home",
+    url: "/user/home",
     icon: Home,
   },
   {
-    title: "My Courses",
-    url: "/mycourses",
+    title: "My projects",
+    url: "user/myprojects",
     icon: Inbox,
-  },
-  {
-    title: "Stats",
-    url: "/stats",
-    icon: Calendar,
   },
   {
     title: "Search",
@@ -62,5 +57,5 @@ export const instructorRoutes = [
 ];
 
 export function getRoutes(role: string) {
-  return role === "user" ? userRoutes : instructorRoutes;
+  return role === "user" || true ? userRoutes : instructorRoutes;
 }

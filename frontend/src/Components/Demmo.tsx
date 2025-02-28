@@ -79,7 +79,7 @@ const handleNodeClick = (event: React.MouseEvent, node: Node) => {
   setcode(data?.code)
 };
   return (
-    <div className="w-[90vw] h-[80vh] rounded-xl border">
+    <div className="w-[80vw] h-[80vh] rounded-xl border">
       <ReactFlow
         nodes={nodes}
         edges={edges}
