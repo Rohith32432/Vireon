@@ -1,10 +1,14 @@
 # Vireon – AI-Powered Code Flow Analyzer 🚀
+https://github.com/user-attachments/assets/6a84f342-f7b2-44ba-b5b2-49655b75c7f8
 
 **Visualizing Code, Debugging Smarter**
 
 ## 📌 Overview
 
-**Vireon** is an AI-powered tool that scans entire project repositories, visualizes execution flow, and provides AI-driven debugging insights. It helps developers **understand, optimize, and debug** their code efficiently by generating **flowcharts, dependency graphs, AI-generated explanations, and auto-narrated video summaries**.
+**Vireon** is an AI-powered tool that scans entire project repositories, visualizes execution flow, and provides AI-driven debugging insights. It helps developers **understand, optimize, and debug** their code efficiently by generating **flowcharts, dependency graphs, AI-generated exp
+
+
+lanations, and auto-narrated video summaries**.
 
 ---
 
